@@ -5,6 +5,7 @@ from kivy.app import App
 from kivy.uix.gridlayout import GridLayout
 
 from genericForm import GenericForm
+from myButton import MyButton, MyButtonBorder
 
 os.environ['KIVY_METRICS_DENSITY'] = '1'
 
@@ -34,17 +35,21 @@ class FrmPrincipal(BoxLayout):
         super().__init__(**kwargs)
 
         grid = GridLayout(cols=2)
-        layout1 = BoxLayout(size_hint=(None, 1))
+        layout1 = BoxLayout(size_hint=(None, 1), orientation='vertical')
         layout1.width = 200
         generic_form = GenericForm()
         generic_form.add_text_field("μn:", 'y')
-        generic_form.add_text_field("Cox:", 'y')
+        generic_form.add_text_field("Cox:", 'c')
         generic_form.add_text_field("W:", 'w')
         generic_form.add_text_field("L:", 'l')
         generic_form.add_text_field("Vgs:", 'vgs')
         generic_form.add_text_field("Vr:", 'vr')
         generic_form.add_text_field("Vds:", 'vds')
         layout1.add_widget(generic_form)
+
+        btn_calc  = MyButtonBorder(size=(128, 64), size_hint=(None, None), text='Calcular')
+        layout1.add_widget(btn_calc)
+
         grid.add_widget(layout1)
         self.add_widget(grid)
 
