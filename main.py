@@ -5,7 +5,7 @@ import kivy
 from kivy.app import App
 from kivy.clock import Clock
 from kivy.core.window import Window
-from kivy.graphics import Line, Triangle, Point, Color
+from kivy.graphics import Line, Triangle, Point, Color, Rectangle
 from kivy.graphics.instructions import Callback
 from kivy.uix.gridlayout import GridLayout
 from kivy.uix.label import Label
@@ -98,16 +98,19 @@ class FrmPrincipal(BoxLayout):
         self.grafico.size_hint = (1, None)
         layout2.add_widget(grid_labels)
         layout2.add_widget(self.grafico)
-        self.layout2 = layout2
 
         grid.size_hint = (1, None)
         grid.height = generic_form.get_height()
         grid.add_widget(layout1)
         grid.add_widget(layout2)
+        self.layout2 = layout2
 
         self.add_widget(grid)
-        layout2 = MyBoxLayout()
-        self.add_widget(layout2)
+        layout3 = BoxLayout()
+        layout_container = MyBoxLayout()
+        layout_container.add_widget(layout3)
+        self.add_widget(layout_container)
+        self.layout3 = layout3
         btn_calc.bind(on_release=self.btn_calc_on_release)
 
         self.p0x = 0
@@ -195,6 +198,13 @@ class FrmPrincipal(BoxLayout):
         self.label_id.width = label_width
         self.label_vds.width = label_width
 
+        self.layout3.canvas.after.clear()
+        print(self.layout3.pos)
+        with self.layout3.canvas.after:
+            Color(rgb=[1, 1, 1])
+            Rectangle(pos=[182, 80], size=[660, 160])
+            Color(rgb=[0.66, 0.40, 0.17])
+            Rectangle(pos=[184, 82], size=[656, 156])
 
         self.grafico.canvas.after.clear()
         with self.grafico.canvas.after:
