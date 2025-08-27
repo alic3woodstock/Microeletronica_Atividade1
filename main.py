@@ -83,9 +83,9 @@ class FrmPrincipal(BoxLayout):
         layout2.borders = ['top', 'right']
 
         grid_labels = GridLayout(cols=5, size_hint=(1, None))
-        self.label_result = Label(text="Resultado: 0", size_hint=(None, 1))
+        self.label_result = Label(text="Ids calc: 0", size_hint=(None, 1))
         self.label_saturacao = Label(text="Saturação: (0, 0)",  size_hint=(None, 1))
-        self.label_id = Label(text="Id: 0",  size_hint=(None, 1))
+        self.label_id = Label(text="Ids: 0",  size_hint=(None, 1))
         self.label_vds = Label(text="Vds: 0", size_hint=(None, 1))
         grid_labels.height = self.label_result.texture_size[1]
         grid_labels.add_widget(self.label_result)
@@ -127,7 +127,7 @@ class FrmPrincipal(BoxLayout):
         result = self.calcular_ids(self.vds)
         self.result_id = result
         result = "{:.4e}".format(result)
-        self.label_result.text = "Resultado: " + result
+        self.label_result.text = "Ids calc: " + result
         self.vpx = 0
         self.label_saturacao.text = ("Saturação: (" + "{:.4}".format(self.vgs - self.vt) + ", "
                                 + "{:.4e}".format(self.calcular_ids(self.vgs - self.vt)) + ")")
@@ -138,10 +138,10 @@ class FrmPrincipal(BoxLayout):
         intervalo_x = 0.01
         escala_x = 100
         escala_y = 200000
-        vpy = 0
         vds = 0
+
         if self.vpx < 640 * 1 / (escala_x * intervalo_x):
-            self.vpx += 2
+            self.vpx += 1
 
         sat = False
         with self.grafico.canvas.after:
@@ -165,7 +165,7 @@ class FrmPrincipal(BoxLayout):
 
                 vds += intervalo_x
 
-        self.label_id.text = "Id: " + "{:.4e}".format(r_id)
+        self.label_id.text = "Ids: " + "{:.4e}".format(r_id)
         self.label_vds.text = "Vds: " + "{:.4}". format(vds)
 
     def calcular_ids(self, vds):
