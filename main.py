@@ -5,7 +5,7 @@ import kivy
 from kivy.app import App
 from kivy.clock import Clock
 from kivy.core.window import Window
-from kivy.graphics import Line, Triangle, Point, Color, Rectangle
+from kivy.graphics import Line, Triangle, Point, Color, Rectangle, Ellipse
 from kivy.graphics.instructions import Callback
 from kivy.uix.gridlayout import GridLayout
 from kivy.uix.label import Label
@@ -83,9 +83,9 @@ class FrmPrincipal(BoxLayout):
         layout2.borders = ['top', 'right']
 
         grid_labels = GridLayout(cols=5, size_hint=(1, None))
-        self.label_result = Label(text="Ids calc: 0", size_hint=(None, 1))
-        self.label_saturacao = Label(text="Saturação: (0, 0)",  size_hint=(None, 1))
-        self.label_id = Label(text="Ids: 0",  size_hint=(None, 1))
+        self.label_result = Label(text="Ids calc: 0", size_hint=(None, 1), color=[0, 1, 1, 1])
+        self.label_saturacao = Label(text="Saturação: (0, 0)", size_hint=(None, 1), color=[1, 1, 0, 1])
+        self.label_id = Label(text="Ids: 0", size_hint=(None, 1))
         self.label_vds = Label(text="Vds: 0", size_hint=(None, 1))
         grid_labels.height = self.label_result.texture_size[1]
         grid_labels.add_widget(self.label_result)
@@ -133,7 +133,7 @@ class FrmPrincipal(BoxLayout):
         self.label_result.text = "Ids calc: " + result
         self.vpx = 0
         self.label_saturacao.text = ("Saturação: (" + "{:.4}".format(self.vgs - self.vt) + ", "
-                                + "{:.4e}".format(self.calcular_ids(self.vgs - self.vt)) + ")")
+                                     + "{:.4e}".format(self.calcular_ids(self.vgs - self.vt)) + ")")
         Clock.unschedule(self.gerar_grafico, all=True)
         Clock.schedule_interval(self.gerar_grafico, 1.0 / 60.0)
 
@@ -169,7 +169,7 @@ class FrmPrincipal(BoxLayout):
                 vds += intervalo_x
 
         self.label_id.text = "Ids: " + "{:.4e}".format(r_id)
-        self.label_vds.text = "Vds: " + "{:.4}". format(vds)
+        self.label_vds.text = "Vds: " + "{:.4}".format(vds)
 
     def calcular_ids(self, vds):
         kp = self.kp
@@ -188,7 +188,7 @@ class FrmPrincipal(BoxLayout):
         vgs = self.vgs
         vt = self.vt
 
-        result = kp * (w / l) * ((vgs - vt) * vds - 1/2 * vds ** 2)
+        result = kp * (w / l) * ((vgs - vt) * vds - 1 / 2 * vds ** 2)
         return result
 
     def update_form(self, _instr):
@@ -199,12 +199,43 @@ class FrmPrincipal(BoxLayout):
         self.label_vds.width = label_width
 
         self.layout3.canvas.after.clear()
-        print(self.layout3.pos)
         with self.layout3.canvas.after:
             Color(rgb=[1, 1, 1])
             Rectangle(pos=[182, 80], size=[660, 160])
             Color(rgb=[0.66, 0.40, 0.17])
             Rectangle(pos=[184, 82], size=[656, 156])
+
+            # borda n-
+            Color(rgb=[1, 1, 1])
+            Line(points=(204, 238, 204, 188), width=2)
+            Line(circle=(224, 188, 20, 270, 180), width=2)
+            Line(points=(224, 168, 364, 168), width=2)
+            Line(circle=(364, 188, 20, 180, 90), width=2)
+            Line(points=(384, 188, 384, 238), width=2)
+
+            # preenchimento n-
+            offset_x = 436
+            Color(rgb=[0.7, 0.7, 0.7])
+            Rectangle(pos=[205, 190], size=[178, 48])
+            Ellipse(pos=[205, 170], size=[40, 40])
+            Rectangle(pos=[226, 170], size=[137, 40])
+            Ellipse(pos=[343, 170], size=[40, 40])
+
+            # borda n+
+            Color(rgb=[1, 1, 1])
+            Line(points=(204 + offset_x, 238, 204 + offset_x, 188), width=2)
+            Line(circle=(224 + offset_x, 188, 20, 270, 180), width=2)
+            Line(points=(224 + offset_x, 168, 364 + offset_x, 168), width=2)
+            Line(circle=(364 + offset_x, 188, 20, 180, 90), width=2)
+            Line(points=(384 + offset_x, 188, 384 + offset_x, 238), width=2)
+
+            # preenchimento n-
+            offset_x = 436
+            Color(rgb=[0.7, 0.7, 0.7])
+            Rectangle(pos=[205 + offset_x, 190], size=[178, 48])
+            Ellipse(pos=[205 + offset_x, 170], size=[40, 40])
+            Rectangle(pos=[226 + offset_x, 170], size=[137, 40])
+            Ellipse(pos=[343 + offset_x, 170], size=[40, 40])
 
         self.grafico.canvas.after.clear()
         with self.grafico.canvas.after:
