@@ -139,6 +139,10 @@ class FrmPrincipal(MyBoxLayout):
         result = "{:.4e}".format(result)
         self.label_result.text = "Id calc.: " + result
         self.vpx = 0
+
+        if self.vgs < self.vt: # evita tensão negativa, região de cut-off
+            self.vgs = self.vt
+
         self.saturacao = self.calcular_ids(self.vgs - self.vt)
         self.label_saturacao.text = ("Saturação: (" + "{:.4}".format(self.vgs - self.vt) + ", "
                                      + "{:.4e}".format(self.saturacao) + ")")
@@ -178,35 +182,41 @@ class FrmPrincipal(MyBoxLayout):
         self.label_id.text = "Id: " + "{:.4e}".format(r_id)
         self.label_vds.text = "Vds: " + "{:.4}".format(vds)
 
-        with self.layout3.canvas.after:
-            # canal n
-            tx = Window.width // 2 - 1024 // 2
-            ty = Window.height // 2 - 778 // 2
-            Translate(tx, ty)
+        if self.vgs > self.vt:
+            with self.layout3.canvas.after:
+                # canal n
+                tx = Window.width // 2 - 1024 // 2
+                ty = Window.height // 2 - 778 // 2
+                Translate(tx, ty)
 
-            # While the depth of drain end is proportional to (Vov – Vds).
-            # Seadra,  Microeletronic Circuits 6th edition, Figure 5.6
-            #
-            # Será inversamente propocional já que o eixo y é invertido no layout 3 (self.layout3).
-            vo = self.vgs - self.vt
-            if (vo - vds) > 0:
-                tamanho_borda = 188 + 50 * (vds / vo)
-            else:
-                tamanho_borda = 238
+                # While the depth of drain end is proportional to (Vov – Vds).
+                # Seadra,  Microeletronic Circuits 6th edition, Figure 5.6
+                #
+                # Será inversamente propocional já que o eixo y é invertido no layout 3 (self.layout3).
+                vo = self.vgs - self.vt
+                if (vo - vds) > 0:
+                    tamanho_borda = 188 + 50 * (vds / vo)
+                else:
+                    tamanho_borda = 238
 
-            Line(points=(386, 188, 638, tamanho_borda))
-            Color(rgb=[0.4, 0.4, 0.4])
-            Quad(points=(387, 238, 637, 238, 637, tamanho_borda, 387, 189))
-            Translate(-tx, -ty)
+                Line(points=(386, 188, 638, tamanho_borda))
+                Color(rgb=[0.4, 0.4, 0.4])
+                Quad(points=(387, 238, 637, 238, 637, tamanho_borda, 387, 189))
+                Translate(-tx, -ty)
 
     def calcular_ids(self, vds):
         kn = self.kn
         w = self.w
         l = self.l
-        vgs = self.vgs
         vt = self.vt
+        vgs = self.vgs
+
+        if vds < 0:
+            vds = 0
 
         result = kn * (w / l) * ((vgs - vt) - (vds / 2)) * vds
+        if result < 0:
+            result = 0
         return result
 
     def calcular_id(self, vds):
