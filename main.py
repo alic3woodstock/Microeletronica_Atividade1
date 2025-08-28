@@ -49,6 +49,7 @@ class FrmPrincipal(MyBoxLayout):
         self.vgs = 0
         self.vt = 0
         self.vds = 0
+        self.la = 0
         self.orientation = 'vertical'
 
         grid = GridLayout(cols=2)
@@ -63,6 +64,7 @@ class FrmPrincipal(MyBoxLayout):
         generic_form.add_text_field("Vgs:", 'vgs')
         generic_form.add_text_field("Vt:", 'vt')
         generic_form.add_text_field("Vds:", 'vds')
+        generic_form.add_text_field("Lambda:", 'la')
 
         # Valores apresentados na primeira aula
         generic_form.ids.kn.text = '340e-6'
@@ -128,10 +130,13 @@ class FrmPrincipal(MyBoxLayout):
             self.vgs = float(self.generic_form.ids.vgs.text)
             self.vt = float(self.generic_form.ids.vt.text)
             self.vds = float(self.generic_form.ids.vds.text)
+            if self.generic_form.ids.la.text.strip():
+                self.la = float(self.generic_form.ids.la.text)
         except ValueError:
             self.kn = 0
             self.w = 0
             self.l = 0
+            self.vt = 0
             self.vgs = 0
 
         result = self.calcular_ids(self.vds)
@@ -163,7 +168,6 @@ class FrmPrincipal(MyBoxLayout):
             for x in range(0, floor(self.vpx)):
                 r_id = self.calcular_ids(vds)
                 if vds >= (self.vgs - self.vt):
-                    r_id = self.saturacao
                     if not sat:
                         Color(rgba=[1, 1, 0, 0.8])
                         Point(points=[self.p0x + vds * escala_x, self.p0y + r_id * escala_y], pointsize=6)
@@ -214,19 +218,18 @@ class FrmPrincipal(MyBoxLayout):
         if vds < 0:
             vds = 0
 
-        result = kn * (w / l) * ((vgs - vt) - (vds / 2)) * vds
+        if vds < (vgs - vt):
+            # ** potenciação em python
+            # kn * (w / l) * ((vgs - vt) - (vds / 2)) * vds
+            # kn * (w / l) * ((vgs - vt) * vds - 1/2 * vds) * vds
+            result = kn * (w / l) * ((vgs - vt) * vds - 1/2 * vds ** 2)
+        else:
+            # kn * (w / l) * ((vgs - vt) ** 2 - 1 / 2 * (vgs - vt) ** 2
+            result = kn * (w / l) * 1 / 2 * (vgs - vt) ** 2
+
+
         if result < 0:
             result = 0
-        return result
-
-    def calcular_id(self, vds):
-        kn = self.kn
-        w = self.w
-        l = self.l
-        vgs = self.vgs
-        vt = self.vt
-
-        result = kn * (w / l) * ((vgs - vt) * vds - 1 / 2 * vds ** 2)
         return result
 
     def update_form(self, _instr):
@@ -343,7 +346,7 @@ class Principal(App):
         return self.FrmPrincipal
 
     def on_start(self):
-        Window.size = (1024, 768)
+        Window.size = (1152, 864)
 
 
 if __name__ == '__main__':
