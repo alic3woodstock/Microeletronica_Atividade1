@@ -181,7 +181,7 @@ class FrmPrincipal(MyBoxLayout):
         with self.layout3.canvas.after:
             # canal n
             tx = Window.width // 2 - 1024 // 2
-            ty = Window.height // 2 - 768 // 2
+            ty = Window.height // 2 - 778 // 2
             Translate(tx, ty)
 
             # While the depth of drain end is proportional to (Vov – Vds).
@@ -196,7 +196,7 @@ class FrmPrincipal(MyBoxLayout):
 
             Line(points=(386, 188, 638, tamanho_borda))
             Color(rgb=[0.4, 0.4, 0.4])
-            Quad(points=(387, 238, 637, 238, 637, tamanho_borda + 1, 387, 189))
+            Quad(points=(387, 238, 637, 238, 637, tamanho_borda, 387, 189))
             Translate(-tx, -ty)
 
     def calcular_ids(self, vds):
@@ -229,7 +229,7 @@ class FrmPrincipal(MyBoxLayout):
         self.layout3.canvas.after.clear()
         with self.layout3.canvas.after:
             tx = Window.width // 2 - 1024 // 2
-            ty = Window.height // 2 - 768 // 2
+            ty = Window.height // 2 - 778 // 2
             Translate(tx, ty)
 
             Color(rgb=[1, 1, 1])
@@ -333,7 +333,7 @@ class Principal(App):
         return self.FrmPrincipal
 
     def on_start(self):
-        Window.size = (1024, 900)
+        Window.size = (1024, 768)
 
 
 if __name__ == '__main__':
