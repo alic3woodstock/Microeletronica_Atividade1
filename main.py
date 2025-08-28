@@ -5,7 +5,7 @@ import kivy
 from kivy.app import App
 from kivy.clock import Clock
 from kivy.core.window import Window
-from kivy.graphics import Line, Triangle, Point, Color, Rectangle, Ellipse
+from kivy.graphics import Line, Triangle, Point, Color, Rectangle, Ellipse, Quad
 from kivy.graphics.instructions import Callback
 from kivy.uix.gridlayout import GridLayout
 from kivy.uix.label import Label
@@ -178,6 +178,14 @@ class FrmPrincipal(BoxLayout):
         self.label_id.text = "Ids: " + "{:.4e}".format(r_id)
         self.label_vds.text = "Vds: " + "{:.4}".format(vds)
 
+        with self.layout3.canvas.after:
+            # canal n
+            tamanho_borda = 189 + (49 * r_id / self.saturacao) # regra de 3 simples, proporcinal a corrente
+
+            Line(points=(386, 188, 638, tamanho_borda - 1))
+            Color(rgb=[0.4, 0.4, 0.4])
+            Quad(points=(387, 238, 637, 238, 637, tamanho_borda, 387, 189))
+
     def calcular_ids(self, vds):
         kp = self.kp
         w = self.w
@@ -227,6 +235,8 @@ class FrmPrincipal(BoxLayout):
             Ellipse(pos=[205, 170], size=[40, 40])
             Rectangle(pos=[226, 170], size=[137, 40])
             Ellipse(pos=[343, 170], size=[40, 40])
+            Color(rgb=[1, 1, 1])
+            Rectangle(pos=[244, 239], size=[94, 16])
 
             # borda n+
             Color(rgb=[1, 1, 1])
@@ -243,6 +253,36 @@ class FrmPrincipal(BoxLayout):
             Ellipse(pos=[205 + offset_x, 170], size=[40, 40])
             Rectangle(pos=[226 + offset_x, 170], size=[137, 40])
             Ellipse(pos=[343 + offset_x, 170], size=[40, 40])
+            Color(rgb=[1, 1, 1])
+            Rectangle(pos=[244 + offset_x, 239], size=[94, 16])
+
+            # parte superior
+            Line(points=(360, 240, 360, 268), width=2)
+            Line(points=(360, 268, 660, 268), width=2)
+            Line(points=(660, 268, 660, 240), width=2)
+            Rectangle(pos=[362, 254], size=[300, 12])
+            for i in range(12):
+                Line(points=(374 + 24 * i, 240, 388 + 24 * i, 256), width=1.4)
+
+            # parte inferior
+            Rectangle(pos=[436, 68], size=[152, 12])
+
+            # terminais
+            Line(points=(290, 256, 290, 276), width=2)
+            Line(circle=(290, 283, 4), width=1.4)
+            Line(points=(290, 287, 290, 307), width=2)
+
+            Line(points=(511, 272, 511, 292), width=2)
+            Line(circle=(511, 299, 4), width=1.4)
+            Line(points=(511, 303, 511, 323), width=2)
+
+            Line(points=(290 + offset_x, 256, 290 + offset_x, 276), width=2)
+            Line(circle=(290 + offset_x, 283, 4), width=1.4)
+            Line(points=(290 + offset_x, 287, 290 + offset_x, 307), width=2)
+
+            Line(points=(511, 67, 511, 47), width=2)
+            Line(circle=(511, 40, 4), width=1.4)
+            Line(points=(511, 36, 511, 16), width=2)
 
         self.grafico.canvas.after.clear()
         with self.grafico.canvas.after:
