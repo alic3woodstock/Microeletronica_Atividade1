@@ -5,7 +5,7 @@ import kivy
 from kivy.app import App
 from kivy.clock import Clock
 from kivy.core.window import Window
-from kivy.graphics import Line, Triangle, Point, Color, Rectangle, Ellipse, Quad
+from kivy.graphics import Line, Triangle, Point, Color, Rectangle, Ellipse, Quad, Translate
 from kivy.graphics.instructions import Callback
 from kivy.uix.gridlayout import GridLayout
 from kivy.uix.label import Label
@@ -38,7 +38,7 @@ Config.set('input', 'mouse', 'mouse,disable_multitouch')
 from kivy.uix.boxlayout import BoxLayout
 
 
-class FrmPrincipal(BoxLayout):
+class FrmPrincipal(MyBoxLayout):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
@@ -70,7 +70,7 @@ class FrmPrincipal(BoxLayout):
         generic_form.ids.l.text = '1e-6'
         generic_form.ids.vgs.text = '3'
         generic_form.ids.vt.text = '1'
-        generic_form.ids.vds.text = '2'
+        generic_form.ids.vds.text = '0.5'
 
         btn_calc = MyButtonBorder(text='Calcular')
         btn_calc.height = generic_form.children_height
@@ -84,9 +84,9 @@ class FrmPrincipal(BoxLayout):
         layout2.borders = ['top', 'right']
 
         grid_labels = GridLayout(cols=5, size_hint=(1, None))
-        self.label_result = Label(text="Ids calc: 0", size_hint=(None, 1), color=[0, 1, 1, 1])
+        self.label_result = Label(text="Id calc.: 0", size_hint=(None, 1), color=[0, 1, 1, 1])
         self.label_saturacao = Label(text="Saturação: (0, 0)", size_hint=(None, 1), color=[1, 1, 0, 1])
-        self.label_id = Label(text="Ids: 0", size_hint=(None, 1))
+        self.label_id = Label(text="Id: 0", size_hint=(None, 1))
         self.label_vds = Label(text="Vds: 0", size_hint=(None, 1))
         grid_labels.height = self.label_result.texture_size[1]
         grid_labels.add_widget(self.label_result)
@@ -137,7 +137,7 @@ class FrmPrincipal(BoxLayout):
         result = self.calcular_ids(self.vds)
         self.result_id = result
         result = "{:.4e}".format(result)
-        self.label_result.text = "Ids calc: " + result
+        self.label_result.text = "Id calc.: " + result
         self.vpx = 0
         self.saturacao = self.calcular_ids(self.vgs - self.vt)
         self.label_saturacao.text = ("Saturação: (" + "{:.4}".format(self.vgs - self.vt) + ", "
@@ -175,16 +175,28 @@ class FrmPrincipal(BoxLayout):
 
                 vds += intervalo_x
 
-        self.label_id.text = "Ids: " + "{:.4e}".format(r_id)
+        self.label_id.text = "Id: " + "{:.4e}".format(r_id)
         self.label_vds.text = "Vds: " + "{:.4}".format(vds)
 
         with self.layout3.canvas.after:
             # canal n
-            tamanho_borda = 189 + (49 * r_id / self.saturacao) # regra de 3 simples, proporcinal a corrente
+            tx = Window.width // 2 - 1024 // 2
+            ty = Window.height // 2 - 768 // 2
+            Translate( tx, ty)
+
+            # While the depth of drain end is proportional to (Vov – Vds).
+            # Será inversamente propocional já que o eixo y é invertido no layout de baixo.
+
+            vo = self.vgs - self.vt
+            if (vo - vds) > 0:
+                tamanho_borda = 189 + 49 * (vds / vo)
+            else:
+                tamanho_borda = 238
 
             Line(points=(386, 188, 638, tamanho_borda - 1))
             Color(rgb=[0.4, 0.4, 0.4])
             Quad(points=(387, 238, 637, 238, 637, tamanho_borda, 387, 189))
+            Translate( -tx, -ty)
 
     def calcular_ids(self, vds):
         kp = self.kp
@@ -215,12 +227,16 @@ class FrmPrincipal(BoxLayout):
 
         self.layout3.canvas.after.clear()
         with self.layout3.canvas.after:
+            tx = Window.width // 2 - 1024 // 2
+            ty = Window.height // 2 - 768 // 2
+            Translate( tx, ty)
+
             Color(rgb=[1, 1, 1])
             Rectangle(pos=[182, 80], size=[660, 160])
             Color(rgb=[0.66, 0.40, 0.17])
             Rectangle(pos=[184, 82], size=[656, 156])
 
-            # borda n-
+            # borda n1
             Color(rgb=[1, 1, 1])
             Line(points=(204, 238, 204, 188), width=2)
             Line(circle=(224, 188, 20, 270, 180), width=2)
@@ -228,7 +244,7 @@ class FrmPrincipal(BoxLayout):
             Line(circle=(364, 188, 20, 180, 90), width=2)
             Line(points=(384, 188, 384, 238), width=2)
 
-            # preenchimento n-
+            # preenchimento n1
             offset_x = 436
             Color(rgb=[0.7, 0.7, 0.7])
             Rectangle(pos=[205, 190], size=[178, 48])
@@ -238,7 +254,7 @@ class FrmPrincipal(BoxLayout):
             Color(rgb=[1, 1, 1])
             Rectangle(pos=[244, 239], size=[94, 16])
 
-            # borda n+
+            # borda n2
             Color(rgb=[1, 1, 1])
             Line(points=(204 + offset_x, 238, 204 + offset_x, 188), width=2)
             Line(circle=(224 + offset_x, 188, 20, 270, 180), width=2)
@@ -246,7 +262,7 @@ class FrmPrincipal(BoxLayout):
             Line(circle=(364 + offset_x, 188, 20, 180, 90), width=2)
             Line(points=(384 + offset_x, 188, 384 + offset_x, 238), width=2)
 
-            # preenchimento n-
+            # preenchimento n2
             offset_x = 436
             Color(rgb=[0.7, 0.7, 0.7])
             Rectangle(pos=[205 + offset_x, 190], size=[178, 48])
@@ -274,7 +290,7 @@ class FrmPrincipal(BoxLayout):
 
             Line(points=(511, 272, 511, 292), width=2)
             Line(circle=(511, 299, 4), width=1.4)
-            Line(points=(511, 303, 511, 323), width=2)
+            Line(points=(511, 305, 511, 325), width=2)
 
             Line(points=(290 + offset_x, 256, 290 + offset_x, 276), width=2)
             Line(circle=(290 + offset_x, 283, 4), width=1.4)
@@ -283,6 +299,9 @@ class FrmPrincipal(BoxLayout):
             Line(points=(511, 67, 511, 47), width=2)
             Line(circle=(511, 40, 4), width=1.4)
             Line(points=(511, 36, 511, 16), width=2)
+
+            Translate(-tx, -ty)
+
 
         self.grafico.canvas.after.clear()
         with self.grafico.canvas.after:
@@ -308,7 +327,7 @@ class Principal(App):
         return self.FrmPrincipal
 
     def on_start(self):
-        Window.size = (1024, 768)
+        Window.size = (1024, 900)
 
 
 if __name__ == '__main__':
