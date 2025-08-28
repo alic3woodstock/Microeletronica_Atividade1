@@ -42,6 +42,7 @@ class FrmPrincipal(BoxLayout):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
+        self.saturacao = 0
         self.kp = 0
         self.w = 0
         self.l = 0
@@ -120,20 +121,27 @@ class FrmPrincipal(BoxLayout):
         self.canvas.add(Callback(self.update_form))
 
     def btn_calc_on_release(self, _widget):
-        self.kp = float(self.generic_form.ids.kp.text)
-        self.w = float(self.generic_form.ids.w.text)
-        self.l = float(self.generic_form.ids.l.text)
-        self.vgs = float(self.generic_form.ids.vgs.text)
-        self.vt = float(self.generic_form.ids.vt.text)
-        self.vds = float(self.generic_form.ids.vds.text)
+        try:
+            self.kp = float(self.generic_form.ids.kp.text)
+            self.w = float(self.generic_form.ids.w.text)
+            self.l = float(self.generic_form.ids.l.text)
+            self.vgs = float(self.generic_form.ids.vgs.text)
+            self.vt = float(self.generic_form.ids.vt.text)
+            self.vds = float(self.generic_form.ids.vds.text)
+        except ValueError:
+            self.kp = 0
+            self.w = 0
+            self.l = 0
+            self.vgs = 0
 
         result = self.calcular_ids(self.vds)
         self.result_id = result
         result = "{:.4e}".format(result)
         self.label_result.text = "Ids calc: " + result
         self.vpx = 0
+        self.saturacao = self.calcular_ids(self.vgs - self.vt)
         self.label_saturacao.text = ("Saturação: (" + "{:.4}".format(self.vgs - self.vt) + ", "
-                                     + "{:.4e}".format(self.calcular_ids(self.vgs - self.vt)) + ")")
+                                     + "{:.4e}".format(self.saturacao) + ")")
         Clock.unschedule(self.gerar_grafico, all=True)
         Clock.schedule_interval(self.gerar_grafico, 1.0 / 60.0)
 
@@ -150,9 +158,8 @@ class FrmPrincipal(BoxLayout):
         with self.grafico.canvas.after:
             for x in range(0, floor(self.vpx)):
                 r_id = self.calcular_ids(vds)
-                r_sat = self.calcular_ids(self.vgs - self.vt)
                 if vds >= (self.vgs - self.vt):
-                    r_id = r_sat
+                    r_id = self.saturacao
                     if not sat:
                         Color(rgba=[1, 1, 0, 0.8])
                         Point(points=[self.p0x + vds * escala_x, self.p0y + r_id * escala_y], pointsize=6)
@@ -247,6 +254,8 @@ class FrmPrincipal(BoxLayout):
             Line(points=[p0x, p0y, p0x + 640, p0y], width=1)
             Triangle(points=[p0x + 635, p0y - 3, p0x + 635, p0y + 3, p0x + 648, p0y], width=1)
             Triangle(points=[p0x - 3, p0y + 335, p0x + 3, p0y + 335, p0x, p0y + 348], width=1)
+            Rectangle(pos=(p0x - 30, p0y + 308), size=[28, 28], source="images/id.png")
+            Rectangle(pos=(p0x + 608, p0y - 30), size=[28, 28], source="images/vds.png")
 
 
 class Principal(App):

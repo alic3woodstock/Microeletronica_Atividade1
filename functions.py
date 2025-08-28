@@ -2,6 +2,7 @@ import hashlib
 import logging
 import os
 from time import ctime, strftime
+from kivy.uix.label import CoreLabel
 
 LOGLEVEL = logging.ERROR
 FORMAT = '%(levelname)s: %(asctime)s - %(message)s'
@@ -47,3 +48,7 @@ def filehash(file_name):
 def version_number():
     str_version = APPVERSION.replace(".", "")
     return int(str_version)
+
+def canvas_label(**kwargs):
+    label = CoreLabel(**kwargs)
+    return label
