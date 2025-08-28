@@ -43,7 +43,7 @@ class FrmPrincipal(MyBoxLayout):
         super().__init__(**kwargs)
 
         self.saturacao = 0
-        self.kp = 0
+        self.kn = 0
         self.w = 0
         self.l = 0
         self.vgs = 0
@@ -57,7 +57,7 @@ class FrmPrincipal(MyBoxLayout):
         layout1.borders = ['left', 'top', 'right']
         self.generic_form = GenericForm()
         generic_form = self.generic_form
-        generic_form.add_text_field("k'n:", 'kp')
+        generic_form.add_text_field("k'n:", 'kn')
         generic_form.add_text_field("W:", 'w')
         generic_form.add_text_field("L:", 'l')
         generic_form.add_text_field("Vgs:", 'vgs')
@@ -65,7 +65,7 @@ class FrmPrincipal(MyBoxLayout):
         generic_form.add_text_field("Vds:", 'vds')
 
         # Valores apresentados na primeira aula
-        generic_form.ids.kp.text = '340e-6'
+        generic_form.ids.kn.text = '340e-6'
         generic_form.ids.w.text = '2e-6'
         generic_form.ids.l.text = '1e-6'
         generic_form.ids.vgs.text = '3'
@@ -122,14 +122,14 @@ class FrmPrincipal(MyBoxLayout):
 
     def btn_calc_on_release(self, _widget):
         try:
-            self.kp = float(self.generic_form.ids.kp.text)
+            self.kn = float(self.generic_form.ids.kn.text)
             self.w = float(self.generic_form.ids.w.text)
             self.l = float(self.generic_form.ids.l.text)
             self.vgs = float(self.generic_form.ids.vgs.text)
             self.vt = float(self.generic_form.ids.vt.text)
             self.vds = float(self.generic_form.ids.vds.text)
         except ValueError:
-            self.kp = 0
+            self.kn = 0
             self.w = 0
             self.l = 0
             self.vgs = 0
@@ -182,40 +182,41 @@ class FrmPrincipal(MyBoxLayout):
             # canal n
             tx = Window.width // 2 - 1024 // 2
             ty = Window.height // 2 - 768 // 2
-            Translate( tx, ty)
+            Translate(tx, ty)
 
             # While the depth of drain end is proportional to (Vov – Vds).
-            # Será inversamente propocional já que o eixo y é invertido no layout de baixo.
-
+            # Seadra,  Microeletronic Circuits 6th edition, Figure 5.6
+            #
+            # Será inversamente propocional já que o eixo y é invertido no layout 3 (self.layout3).
             vo = self.vgs - self.vt
             if (vo - vds) > 0:
-                tamanho_borda = 189 + 49 * (vds / vo)
+                tamanho_borda = 188 + 50 * (vds / vo)
             else:
                 tamanho_borda = 238
 
-            Line(points=(386, 188, 638, tamanho_borda - 1))
+            Line(points=(386, 188, 638, tamanho_borda))
             Color(rgb=[0.4, 0.4, 0.4])
-            Quad(points=(387, 238, 637, 238, 637, tamanho_borda, 387, 189))
-            Translate( -tx, -ty)
+            Quad(points=(387, 238, 637, 238, 637, tamanho_borda + 1, 387, 189))
+            Translate(-tx, -ty)
 
     def calcular_ids(self, vds):
-        kp = self.kp
+        kn = self.kn
         w = self.w
         l = self.l
         vgs = self.vgs
         vt = self.vt
 
-        result = kp * (w / l) * ((vgs - vt) - (vds / 2)) * vds
+        result = kn * (w / l) * ((vgs - vt) - (vds / 2)) * vds
         return result
 
     def calcular_id(self, vds):
-        kp = self.kp
+        kn = self.kn
         w = self.w
         l = self.l
         vgs = self.vgs
         vt = self.vt
 
-        result = kp * (w / l) * ((vgs - vt) * vds - 1 / 2 * vds ** 2)
+        result = kn * (w / l) * ((vgs - vt) * vds - 1 / 2 * vds ** 2)
         return result
 
     def update_form(self, _instr):
@@ -229,7 +230,7 @@ class FrmPrincipal(MyBoxLayout):
         with self.layout3.canvas.after:
             tx = Window.width // 2 - 1024 // 2
             ty = Window.height // 2 - 768 // 2
-            Translate( tx, ty)
+            Translate(tx, ty)
 
             Color(rgb=[1, 1, 1])
             Rectangle(pos=[182, 80], size=[660, 160])
@@ -253,6 +254,7 @@ class FrmPrincipal(MyBoxLayout):
             Ellipse(pos=[343, 170], size=[40, 40])
             Color(rgb=[1, 1, 1])
             Rectangle(pos=[244, 239], size=[94, 16])
+            Rectangle(pos=[278, 192], size=[32, 32], source="images/nmais.png")
 
             # borda n2
             Color(rgb=[1, 1, 1])
@@ -271,6 +273,7 @@ class FrmPrincipal(MyBoxLayout):
             Ellipse(pos=[343 + offset_x, 170], size=[40, 40])
             Color(rgb=[1, 1, 1])
             Rectangle(pos=[244 + offset_x, 239], size=[94, 16])
+            Rectangle(pos=[278 + offset_x, 192], size=[32, 32], source="images/nmais.png")
 
             # parte superior
             Line(points=(360, 240, 360, 268), width=2)
@@ -287,21 +290,24 @@ class FrmPrincipal(MyBoxLayout):
             Line(points=(290, 256, 290, 276), width=2)
             Line(circle=(290, 283, 4), width=1.4)
             Line(points=(290, 287, 290, 307), width=2)
+            Rectangle(pos=[294, 264], size=[32, 32], source="images/s.png")
 
             Line(points=(511, 272, 511, 292), width=2)
             Line(circle=(511, 299, 4), width=1.4)
             Line(points=(511, 305, 511, 325), width=2)
+            Rectangle(pos=[515, 283], size=[32, 32], source="images/g.png")
 
             Line(points=(290 + offset_x, 256, 290 + offset_x, 276), width=2)
             Line(circle=(290 + offset_x, 283, 4), width=1.4)
             Line(points=(290 + offset_x, 287, 290 + offset_x, 307), width=2)
+            Rectangle(pos=[294 + offset_x, 264], size=[32, 32], source="images/d.png")
 
             Line(points=(511, 67, 511, 47), width=2)
             Line(circle=(511, 40, 4), width=1.4)
             Line(points=(511, 36, 511, 16), width=2)
+            Rectangle(pos=[515, 20], size=[32, 32], source="images/b.png")
 
             Translate(-tx, -ty)
-
 
         self.grafico.canvas.after.clear()
         with self.grafico.canvas.after:
