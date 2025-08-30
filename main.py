@@ -7,8 +7,10 @@ from kivy.clock import Clock
 from kivy.core.window import Window
 from kivy.graphics import Line, Triangle, Point, Color, Rectangle, Ellipse, Quad, Translate
 from kivy.graphics.instructions import Callback
+from kivy.uix.anchorlayout import AnchorLayout
 from kivy.uix.gridlayout import GridLayout
 from kivy.uix.label import Label
+from sympy import diff, symbols
 
 from functions import text_color
 from genericForm import GenericForm
@@ -110,8 +112,16 @@ class FrmPrincipal(MyBoxLayout):
 
         self.add_widget(grid)
         layout3 = BoxLayout()
-        layout_container = MyBoxLayout()
+
+        self.label_derivada = Label(text="----", size_hint=(None, 1), color=[1, 1, 1, 1])
+        layout4 = AnchorLayout(size_hint=(1, None))
+        layout4.height = 24
+        layout4.add_widget(self.label_derivada)
+        self.layout4 = layout4
+
+        layout_container = MyBoxLayout(orientation='vertical')
         layout_container.add_widget(layout3)
+        layout_container.add_widget(layout4)
         self.add_widget(layout_container)
         self.layout3 = layout3
         btn_calc.bind(on_release=self.btn_calc_on_release)
@@ -145,7 +155,7 @@ class FrmPrincipal(MyBoxLayout):
         self.label_result.text = "Ids calc.: " + result
         self.vpx = 0
 
-        if self.vgs < self.vt: # evita tensão negativa, região de cut-off
+        if self.vgs < self.vt:  # evita tensão negativa, região de cut-off
             self.vgs = self.vt
 
         self.saturacao = self.calcular_ids(self.vgs - self.vt)
@@ -187,6 +197,7 @@ class FrmPrincipal(MyBoxLayout):
 
         self.label_id.text = "Ids: " + "{:.4e}".format(r_id)
         self.label_vds.text = "Vds: " + "{:.4}".format(vds)
+        self.calcular_derivada(vds)
 
         if self.vgs > self.vt:
             with self.layout3.canvas.after:
@@ -227,22 +238,36 @@ class FrmPrincipal(MyBoxLayout):
             # ** potenciação em python
             # kn * (w / l) * ((vgs - vt) - (vds / 2)) * vds
             # kn * (w / l) * ((vgs - vt) * vds - 1/2 * vds) * vds
-            result = kn * (w / l) * ((vgs - vt) * vds - 1/2 * vds ** 2) * (1 + lb*vds)
+            result = kn * (w / l) * ((vgs - vt) * vds - 1 / 2 * vds ** 2) * (1 + lb * vds)
         else:
             # kn * (w / l) * ((vgs - vt) ** 2 - 1 / 2 * (vgs - vt) ** 2
-            result = kn * (w / l) * 1 / 2 * (vgs - vt) ** 2 * (1 + lb*vds)
-
+            result = kn * (w / l) * 1 / 2 * (vgs - vt) ** 2 * (1 + lb * vds)
 
         if result < 0:
             result = 0
         return result
 
+    def calcular_derivada(self, pvds):
+        kn = self.kn
+        w = self.w
+        l = self.l
+
+        vds, vt, vgs, lb = symbols('vds vt vgs lb')
+        if pvds < (self.vgs - self.vt):
+            ids = kn * (w / l) * ((vgs - vt) * vds - 1 / 2 * vds ** 2) * (1 + lb * vds)
+        else:
+            ids = kn * (w / l) * 1 / 2 * (vgs - vt) ** 2 * (1 + lb * vds)
+
+        result = ids
+        self.label_derivada.text = str(result)
+
     def update_form(self, _instr):
         label_width = self.grid_labels.width // 4
-        self.label_result.width = label_width
-        self.label_saturacao.width = label_width
-        self.label_id.width = label_width
-        self.label_vds.width = label_width
+        for c in self.grid_labels.children:
+            if isinstance(c, Label):
+                c.width = label_width
+
+        self.label_derivada.height = self.label_derivada.texture_size[1]
 
         self.layout3.canvas.after.clear()
         with self.layout3.canvas.after:
