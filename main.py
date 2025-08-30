@@ -49,7 +49,7 @@ class FrmPrincipal(MyBoxLayout):
         self.vgs = 0
         self.vt = 0
         self.vds = 0
-        self.la = 0
+        self.lb = 0
         self.orientation = 'vertical'
 
         grid = GridLayout(cols=2)
@@ -64,7 +64,7 @@ class FrmPrincipal(MyBoxLayout):
         generic_form.add_text_field("Vgs:", 'vgs')
         generic_form.add_text_field("Vt:", 'vt')
         generic_form.add_text_field("Vds:", 'vds')
-        generic_form.add_text_field("Lambda:", 'la')
+        generic_form.add_text_field("Lambda:", 'lb')
 
         # Valores apresentados na primeira aula
         generic_form.ids.kn.text = '340e-6'
@@ -86,9 +86,9 @@ class FrmPrincipal(MyBoxLayout):
         layout2.borders = ['top', 'right']
 
         grid_labels = GridLayout(cols=5, size_hint=(1, None))
-        self.label_result = Label(text="Id calc.: 0", size_hint=(None, 1), color=[0, 1, 1, 1])
+        self.label_result = Label(text="Ids calc.: 0", size_hint=(None, 1), color=[0, 1, 1, 1])
         self.label_saturacao = Label(text="Saturação: (0, 0)", size_hint=(None, 1), color=[1, 1, 0, 1])
-        self.label_id = Label(text="Id: 0", size_hint=(None, 1))
+        self.label_id = Label(text="Ids: 0", size_hint=(None, 1))
         self.label_vds = Label(text="Vds: 0", size_hint=(None, 1))
         grid_labels.height = self.label_result.texture_size[1]
         grid_labels.add_widget(self.label_result)
@@ -130,8 +130,8 @@ class FrmPrincipal(MyBoxLayout):
             self.vgs = float(self.generic_form.ids.vgs.text)
             self.vt = float(self.generic_form.ids.vt.text)
             self.vds = float(self.generic_form.ids.vds.text)
-            if self.generic_form.ids.la.text.strip():
-                self.la = float(self.generic_form.ids.la.text)
+            if self.generic_form.ids.lb.text.strip():
+                self.lb = float(self.generic_form.ids.lb.text)
         except ValueError:
             self.kn = 0
             self.w = 0
@@ -142,7 +142,7 @@ class FrmPrincipal(MyBoxLayout):
         result = self.calcular_ids(self.vds)
         self.result_id = result
         result = "{:.4e}".format(result)
-        self.label_result.text = "Id calc.: " + result
+        self.label_result.text = "Ids calc.: " + result
         self.vpx = 0
 
         if self.vgs < self.vt: # evita tensão negativa, região de cut-off
@@ -156,11 +156,13 @@ class FrmPrincipal(MyBoxLayout):
 
     def gerar_grafico(self, _arg):
         intervalo_x = 0.01
-        escala_x = 100
+        escala_x = 200
         escala_y = 200000
         vds = 0
 
-        if self.vpx < 640 * 1 / (escala_x * intervalo_x):
+        px_max = self.grafico.width - 64
+
+        if self.vpx < px_max / (escala_x * intervalo_x):
             self.vpx += 1
 
         sat = False
@@ -183,14 +185,14 @@ class FrmPrincipal(MyBoxLayout):
 
                 vds += intervalo_x
 
-        self.label_id.text = "Id: " + "{:.4e}".format(r_id)
+        self.label_id.text = "Ids: " + "{:.4e}".format(r_id)
         self.label_vds.text = "Vds: " + "{:.4}".format(vds)
 
         if self.vgs > self.vt:
             with self.layout3.canvas.after:
                 # canal n
                 tx = Window.width // 2 - 1024 // 2
-                ty = Window.height // 2 - 778 // 2
+                ty = Window.height // 2 - 836 // 2
                 Translate(tx, ty)
 
                 # While the depth of drain end is proportional to (Vov – Vds).
@@ -200,12 +202,14 @@ class FrmPrincipal(MyBoxLayout):
                 vo = self.vgs - self.vt
                 if (vo - vds) > 0:
                     tamanho_borda = 188 + 50 * (vds / vo)
+                    tamanho_canal = 638
                 else:
                     tamanho_borda = 238
+                    tamanho_canal = 338 + 300 * (self.saturacao / r_id)
 
-                Line(points=(386, 188, 638, tamanho_borda))
+                Line(points=(386, 188, tamanho_canal, tamanho_borda))
                 Color(rgb=[0.4, 0.4, 0.4])
-                Quad(points=(387, 238, 637, 238, 637, tamanho_borda, 387, 189))
+                Quad(points=(387, 238, 637, 238, tamanho_canal - 1, tamanho_borda, 387, 189))
                 Translate(-tx, -ty)
 
     def calcular_ids(self, vds):
@@ -214,6 +218,7 @@ class FrmPrincipal(MyBoxLayout):
         l = self.l
         vt = self.vt
         vgs = self.vgs
+        lb = self.lb
 
         if vds < 0:
             vds = 0
@@ -222,10 +227,10 @@ class FrmPrincipal(MyBoxLayout):
             # ** potenciação em python
             # kn * (w / l) * ((vgs - vt) - (vds / 2)) * vds
             # kn * (w / l) * ((vgs - vt) * vds - 1/2 * vds) * vds
-            result = kn * (w / l) * ((vgs - vt) * vds - 1/2 * vds ** 2)
+            result = kn * (w / l) * ((vgs - vt) * vds - 1/2 * vds ** 2) * (1 + lb*vds)
         else:
             # kn * (w / l) * ((vgs - vt) ** 2 - 1 / 2 * (vgs - vt) ** 2
-            result = kn * (w / l) * 1 / 2 * (vgs - vt) ** 2
+            result = kn * (w / l) * 1 / 2 * (vgs - vt) ** 2 * (1 + lb*vds)
 
 
         if result < 0:
@@ -242,7 +247,7 @@ class FrmPrincipal(MyBoxLayout):
         self.layout3.canvas.after.clear()
         with self.layout3.canvas.after:
             tx = Window.width // 2 - 1024 // 2
-            ty = Window.height // 2 - 778 // 2
+            ty = Window.height // 2 - 836 // 2
             Translate(tx, ty)
 
             Color(rgb=[1, 1, 1])
@@ -326,14 +331,18 @@ class FrmPrincipal(MyBoxLayout):
         with self.grafico.canvas.after:
             p0x = self.layout2.pos[0] + 32
             p0y = self.layout2.pos[1] + 32
+
+            px_max = self.layout2.pos[0] + self.layout2.width - 64
+            py_max = self.layout2.pos[1] + self.layout2.height - 64
+
             self.p0x = p0x
             self.p0y = p0y
-            Line(points=[p0x, p0y, p0x, p0y + 340], width=1)
-            Line(points=[p0x, p0y, p0x + 640, p0y], width=1)
-            Triangle(points=[p0x + 635, p0y - 3, p0x + 635, p0y + 3, p0x + 648, p0y], width=1)
-            Triangle(points=[p0x - 3, p0y + 335, p0x + 3, p0y + 335, p0x, p0y + 348], width=1)
-            Rectangle(pos=(p0x - 30, p0y + 308), size=[28, 28], source="images/id.png")
-            Rectangle(pos=(p0x + 608, p0y - 30), size=[28, 28], source="images/vds.png")
+            Line(points=[p0x, p0y, p0x, py_max], width=1)
+            Line(points=[p0x, p0y, px_max, p0y], width=1)
+            Triangle(points=[px_max, p0y - 3, px_max, p0y + 3, px_max + 10, p0y], width=1)
+            Triangle(points=[p0x - 3, py_max, p0x + 3, py_max, p0x, py_max + 10], width=1)
+            Rectangle(pos=(p0x - 30, py_max - 32), size=[28, 28], source="images/id.png")
+            Rectangle(pos=(px_max - 32, p0y - 30), size=[28, 28], source="images/vds.png")
 
 
 class Principal(App):
@@ -346,7 +355,9 @@ class Principal(App):
         return self.FrmPrincipal
 
     def on_start(self):
-        Window.size = (1152, 864)
+        # Window.size = (1152, 864)
+        Window.borderless = True
+        Window.fullscreen = True
 
 
 if __name__ == '__main__':
