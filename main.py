@@ -10,7 +10,6 @@ from kivy.graphics.instructions import Callback
 from kivy.uix.anchorlayout import AnchorLayout
 from kivy.uix.gridlayout import GridLayout
 from kivy.uix.label import Label
-from sympy import diff, symbols
 
 from functions import text_color
 from genericForm import GenericForm
@@ -176,6 +175,7 @@ class FrmPrincipal(MyBoxLayout):
             self.vpx += 1
 
         sat = False
+        py_max = self.layout2.pos[1] + self.layout2.height - 64
         with self.grafico.canvas.after:
             for x in range(0, floor(self.vpx)):
                 r_id = self.calcular_ids(vds)
@@ -193,11 +193,35 @@ class FrmPrincipal(MyBoxLayout):
                     Color(rgba=[0, 1, 1, 0.8])
                     Point(points=[self.p0x + vds * escala_x, self.p0y + result], pointsize=6)
 
+
                 vds += intervalo_x
+
+            Color(rgb=[0, 1, 0])
+            if self.p0x + vds * escala_x > 8 and ((self.vgs - self.vt) * escala_x) > 8:
+                if vds >= (self.vgs - self.vt):
+                    px = self.p0x + (self.vgs - self.vt)  * escala_x
+                    Line(points=(self.p0x + 8, py_max - 16, px - 10, py_max - 16))
+                    Line(points=(px - 18, py_max - 16 + 6, px - 10, py_max - 16,
+                                 px - 18, py_max - 16 - 6))
+
+                    Color(rgb=[1, 1, 0])
+                    Line(points=(px + 8, py_max - 16,
+                                 self.p0x + vds * escala_x + 8, py_max - 16))
+                    Line(points=(px + 18, py_max - 16 + 6, px + 10, py_max - 16,
+                                 px + 18, py_max - 16 - 6))
+                    Color(rgba=text_color)
+                    Line(points=(px, py_max, px, self.p0y), dashes=[4, 4])
+                else:
+                    Line(points=(self.p0x + 8, py_max -16, self.p0x + vds * escala_x, py_max - 16))
+                Color(rgb=[0, 1, 0])
+                Line(points=(self.p0x + 16, py_max -16 + 6, self.p0x +8, py_max - 16,
+                             self.p0x + 16, py_max -16 - 6))
+
+
 
         self.label_id.text = "Ids: " + "{:.4e}".format(r_id)
         self.label_vds.text = "Vds: " + "{:.4}".format(vds)
-        self.calcular_derivada(vds)
+        self.calcular_condutancia(vds)
 
         if self.vgs > self.vt:
             with self.layout3.canvas.after:
@@ -247,19 +271,31 @@ class FrmPrincipal(MyBoxLayout):
             result = 0
         return result
 
-    def calcular_derivada(self, pvds):
+    def calcular_condutancia(self, pvds):
         kn = self.kn
         w = self.w
         l = self.l
+        vt = self.vt
+        vgs = self.vgs
+        lb = self.lb
 
-        vds, vt, vgs, lb = symbols('vds vt vgs lb')
-        if pvds < (self.vgs - self.vt):
-            ids = kn * (w / l) * ((vgs - vt) * vds - 1 / 2 * vds ** 2) * (1 + lb * vds)
+        if self.lb <= 0: # conceitos da primeira aula
+            if pvds < (self.vgs - self.vt):
+                ids = kn * (w / l) * (vgs - vt)
+            else:
+                ids = 0
+        else: # funções da condutância considerando o lambda, derivando as equações
+            if pvds < (self.vgs - self.vt):
+                ids = lb * kn * (w / l) * (vgs - vt - pvds)
+            else:
+                ids = lb * kn * (w / l) * 1 / 2 * (vgs - vt) ** 2
+
+        if ids > 0:
+            result = ids
         else:
-            ids = kn * (w / l) * 1 / 2 * (vgs - vt) ** 2 * (1 + lb * vds)
+            result = 0
 
-        result = ids
-        self.label_derivada.text = str(result)
+        self.label_derivada.text = 'Condutância: ' + "{:.4e}".format(result)
 
     def update_form(self, _instr):
         label_width = self.grid_labels.width // 4
@@ -383,6 +419,7 @@ class Principal(App):
         # Window.size = (1152, 864)
         Window.borderless = True
         Window.fullscreen = True
+        Window.always_on_top = True
 
 
 if __name__ == '__main__':
